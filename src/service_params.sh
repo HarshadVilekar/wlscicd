@@ -7,7 +7,7 @@ export JENKINS_URL=http://10.0.6.9/jenkins
 
 DIR=`dirname $0`
 # WLS_OKE_SERVICE_SECRETS_FILE
-source "$DIR/secrets/wlsoke_service_secrets.sh"
+source "DIR/../secrets/wlsoke_service_secrets.sh"
 export SSH_PRIVATE_KEY_FILE=$DIR/ssh_key
 echo "$SSH_PRIVATE_KEY" > $SSH_PRIVATE_KEY_FILE
 chmod 600 $SSH_PRIVATE_KEY_FILE
