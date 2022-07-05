@@ -1,0 +1,26 @@
+<assembly>
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <dependencySets>
+        <dependencySet>
+            <outputDirectory>/wlsdeploy/applications</outputDirectory>
+            <unpack>false</unpack>
+            <useProjectArtifact>false</useProjectArtifact>
+            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+            <includes>
+                <include>com.wdtdemo.weblogic:webapp</include>
+            </includes>
+        </dependencySet>
+        <dependencySet>
+            <outputDirectory>/wlsdeploy/sharedLibraries</outputDirectory>
+            <unpack>false</unpack>
+            <useProjectArtifact>false</useProjectArtifact>
+            <outputFileNameMapping>${artifact.artifactId}.${artifact.extension}</outputFileNameMapping>
+            <includes>
+                <include>javax.ws.rs:javax.ws.rs-api</include>
+            </includes>
+        </dependencySet>
+    </dependencySets>
+</assembly>
