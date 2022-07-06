@@ -119,7 +119,19 @@ class JenkinsBuild:
 
 
 if __name__ == '__main__':
+    usage_message = "Usage: launch-jenkins-job.py [launch | wait_for_completion]"
+    if len(sys.argv) < 2:
+        print(usage_message)
+        sys.exit(1)
+    operation = sys.argv[1]
     jenkins_build = JenkinsBuild()
-    if jenkins_build.launch() and jenkins_build.wait_for_completion():
-            sys.exit(0)
-    sys.exit(1)
+    if operation == "launch":
+        if not jenkins_build.launch():
+            sys.exit(1)
+    elif operation == "wait_for_completion":
+        if not jenkins_build.wait_for_completion():
+            sys.exit(1)
+    else:
+        print(usage_message)
+        sys.exit(1)
+    sys.exit(0)
