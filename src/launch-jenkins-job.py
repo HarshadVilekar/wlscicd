@@ -156,6 +156,17 @@ class JenkinsBuild:
         print ("Jenkins CI/CD Job {0} Build {1} status: {2}".format(self.jenkins_job_name, build_status_output_json["number"], build_status_output_json["result"]))
         return success
 
+    def get_app_url(self, app_name):
+        external_lb_command = "kubectl get svc {0}-lb-external -n wlsoke-ingress-nginx | grep {0}-lb-external".format(self.domain_name)
+        cmd_out, status = self.execute_shell_command_on_admin_vm(external_lb_command)
+        if not status or not cmd_out:
+            return "", False
+        else:
+            external_lb_ip = cmd_out.split()[3]
+            if not external_lb_ip:
+                return "", False
+            return True, "https://{0}/{1}".format(external_lb_ip, app_name)
+
 
 if __name__ == '__main__':
     usage_message = "Usage: launch-jenkins-job.py [launch | wait_for_completion | scp_file_to_admin_vm]"
@@ -178,6 +189,17 @@ if __name__ == '__main__':
         dest_file_path = sys.argv[3]
         if not jenkins_build.scp_file_to_admin_vm(src_file_path, dest_file_path):
             sys.exit(1)
+    elif operation == "get_app_url":
+        if len(sys.argv) < 3:
+            print("Usage: launch-jenkins-job.py get_app_url <app_name>")
+            sys.exit(1)
+        app_name = sys.argv[2]
+        status, app_url = jenkins_build.get_app_url(app_name)
+        if not status:
+            print("Unable to get get_app_url for deployed app {0}".format(app_name))
+            sys.exit(1)
+        else:
+            print("app_url via external lb: {0}".format(app_url))
     else:
         print(usage_message)
         sys.exit(1)
