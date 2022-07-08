@@ -20,12 +20,14 @@ class JenkinsBuild:
         self.jenkins_build_with_parameters = "buildWithParameters?token={0}".format(self.jenkins_job_token_name)
 
     def get_update_domain_job_params(self):
-        shared_file_system_str = "Shared%20File%20System"
-        shared_location = "/u01/shared"
-        archive_params = "&Archive_Source={0}&Archive_File_Location={1}/archive.zip".format(shared_file_system_str, shared_location)
-        domain_model_source_params = "&Domain_Model_Source={0}&Model_File_Location={1}/model.yaml".format(shared_file_system_str, shared_location)
-        variable_source_params = "&Variable_Source={0}&Variable_File_Location={1}/model.properties".format(shared_file_system_str, shared_location)
-        return archive_params + domain_model_source_params + variable_source_params
+        shared_file_system = "Shared%20File%20System"
+        shared_location = "%2Fu01%2Fshared%2F"
+        domain_name_params = "&Domain_Name={0}".format(self.domain_name)
+        archive_params = "&Archive_Source={0}&Archive_File_Location={1}archive.zip".format(shared_file_system, shared_location)
+        domain_model_source_params = "&Domain_Model_Source={0}&Model_File_Location={1}model.yaml".format(shared_file_system, shared_location)
+        variable_source_params = "&Variable_Source={0}&Variable_File_Location={1}model.properties".format(shared_file_system, shared_location)
+        rollback_params = "&Rollback_On_Failure=true"
+        return domain_name_params + archive_params + domain_model_source_params + variable_source_params + rollback_params
 
     def missing_environment_variable(self, env_var_name):
         print("set environmanet variable {0} and try again".format(env_var_name))
@@ -37,6 +39,7 @@ class JenkinsBuild:
         self.admin_ip=os.getenv('ADMIN_IP')
         self.jenkins_creds=os.getenv('JENKINS_CREDS')
         self.jenkins_job_name = os.getenv('JENKINS_JOB_NAME')
+        self.domain_name = os.getenv('DOMAIN_NAME')
         # token is created at the menu:
         # Job Configuration - Build Trigger - Authentication Token to trigger builds remotely
         self.jenkins_job_token_name = os.getenv('JENKINS_JOB_TOKEN_NAME')
@@ -59,6 +62,9 @@ class JenkinsBuild:
         if not self.jenkins_job_token_name:
             self.missing_environment_variable("JENKINS_JOB_TOKEN_NAME")
 
+        if not self.domain_name:
+            self.missing_environment_variable("DOMAIN_NAME")
+
         ssh_option_quiet = '-o LogLevel=quiet'
         self.ssh_options = ssh_option_quiet + ' -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i {0} -o ProxyCommand="ssh -W %h:%p -i {0} opc@{1}"'.format \
             (self.ssh_private_key_file, self.bastion_ip)
@@ -74,7 +80,7 @@ class JenkinsBuild:
 
     def execute_shell_command_on_admin_vm(self, command, output_expected=True, print_output=False, print_command=False):
         ssh_admin_vm_cmd = 'ssh {0} opc@{1}'.format(self.ssh_options, self.admin_ip)
-        shell_command = "{0} {1}".format(ssh_admin_vm_cmd, command)
+        shell_command = "{0} '{1}'".format(ssh_admin_vm_cmd, command)
         return self.execute_command(shell_command, output_expected=output_expected, print_output=print_output, print_command=print_command)
 
     def execute_command(self, command, output_expected=True, print_output=False, print_command=False):
@@ -124,7 +130,7 @@ class JenkinsBuild:
         return status
 
     def get_job_launch_command(self):
-        return "{0} {1}job/{2}/build?token={3} {4} {5}".format(
+        return '{0} "{1}job/{2}/build?token={3}" {4} {5}'.format(
             self.curl_command, self.jenkins_url, self.jenkins_job_name, self.jenkins_job_token_name, self.jenkins_creds_command, self.jenkins_crumb_header)
 
     def get_update_domain_job_launch_command(self):
